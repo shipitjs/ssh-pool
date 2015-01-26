@@ -177,19 +177,17 @@ describe('SSH Connection', function () {
         '"ssh " /src/dir user@host:/dest/dir');
     });
 
-    // it('should accept "remoteSrc" option', function (done) {
-    //   connection.copy('/src/dir', '/dest/dir', {remoteSrc: true}, done);
+    it('should accept "remoteSrc" option', function (done) {
+      connection.copy('/src/dir', '/dest/dir', {remoteSrc: true}, done);
 
-    //   expect(childProcess.exec).to.be.calledWith('rsync --exclude "a" --exclude "b" -az -e ' +
-    //     '"ssh " user@host:/src/dir /dest/dir');
-    // });
+      expect(childProcess.exec).to.be.calledWith('rsync -az -e "ssh " user@host:/src/dir /dest/dir');
+    });
 
-    // it('should accept "remoteDest" option', function (done) {
-    //   connection.copy('/src/dir', '/dest/dir', {remoteDest: true}, done);
+    it('should accept "remoteDest" option', function (done) {
+      connection.copy('/src/dir', '/dest/dir', {remoteDest: true}, done);
 
-    //   expect(childProcess.exec).to.be.calledWith('rsync --exclude "a" --exclude "b" -az -e ' +
-    //     '"ssh " /src/dir user@host:/dest/dir');
-    // });
+      expect(childProcess.exec).to.be.calledWith('rsync -az -e "ssh " /src/dir user@host:/dest/dir');
+    });
 
     it('should use key if present', function (done) {
       connection = new Connection({

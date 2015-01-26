@@ -80,12 +80,12 @@ describe('SSH Connection pool', function () {
 
         expect(childProcess.exec).to.be.calledWith(
           'rsync -az -e "ssh " /src/dir deploy@myserver:/dest/dir',
-          {maxBuffer: 1000 * 1024}
+          {maxBuffer: 1000 * 1024, remoteDest: true, remoteSrc: false}
         );
 
         expect(childProcess.exec).to.be.calledWith(
           'rsync -az -e "ssh " /src/dir deploy@myserver2:/dest/dir',
-          {maxBuffer: 1000 * 1024}
+          {maxBuffer: 1000 * 1024, remoteDest: true, remoteSrc: false}
         );
 
         done();

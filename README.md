@@ -156,6 +156,14 @@ pool.run('hostname')
 
 Same as `connection.copy`, except that the copy is done in parallel on each server of the pool.
 
+**Options:**
+
+```
+@param {object} [options.direction] Direction of copy
+```
+
+Also all exec options are supported.
+
 **Arguments:**
 
 ```

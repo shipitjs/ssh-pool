@@ -114,6 +114,17 @@ describe('SSH Connection', function () {
         'ssh -p 12345 user@host "my-command -x"'
       );
     });
+    
+    it('should use StrictHostKeyChecking if present', function () {
+      connection = new Connection({
+        remote: 'user@host',
+        strict: 'no' 
+      });
+      connection.run('my-command -x', function () {});
+      expect(childProcess.exec).to.be.calledWith(
+        'ssh -o StrictHostKeyChecking=no user@host "my-command -x"'
+      );
+    });
 
     it('should use port and key if both are present', function () {
       connection = new Connection({
@@ -198,6 +209,15 @@ describe('SSH Connection', function () {
       });
       connection.copy('/src/dir', '/dest/dir', done);
       expect(childProcess.exec).to.be.calledWith('rsync -az -e "ssh -p 12345" /src/dir user@host:/dest/dir');
+    });
+    
+    it('should use StrictHostKeyChecking if present', function (done) {
+      connection = new Connection({
+        remote: 'user@host',
+        strict: 'yes' 
+      });
+      connection.copy('/src/dir', '/dest/dir', done);
+      expect(childProcess.exec).to.be.calledWith('rsync -az -e "ssh -o StrictHostKeyChecking=yes" /src/dir user@host:/dest/dir');
     });
 
     it('should use port and key if both are present', function (done) {

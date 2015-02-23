@@ -114,11 +114,11 @@ describe('SSH Connection', function () {
         'ssh -p 12345 user@host "my-command -x"'
       );
     });
-    
+
     it('should use StrictHostKeyChecking if present', function () {
       connection = new Connection({
         remote: 'user@host',
-        strict: 'no' 
+        strict: 'no'
       });
       connection.run('my-command -x', function () {});
       expect(childProcess.exec).to.be.calledWith(
@@ -194,6 +194,12 @@ describe('SSH Connection', function () {
       expect(childProcess.exec).to.be.calledWith('rsync -az -e "ssh " user@host:/src/dir /dest/dir');
     });
 
+    it('should accept "rsync" option', function (done) {
+      connection.copy('/src/dir', '/dest/dir', {rsync: '--info=progress2'}, done);
+
+      expect(childProcess.exec).to.be.calledWith('rsync -az --info=progress2 -e "ssh " /src/dir user@host:/dest/dir');
+    });
+
     it('should use key if present', function (done) {
       connection = new Connection({
         remote: 'user@host',
@@ -210,11 +216,11 @@ describe('SSH Connection', function () {
       connection.copy('/src/dir', '/dest/dir', done);
       expect(childProcess.exec).to.be.calledWith('rsync -az -e "ssh -p 12345" /src/dir user@host:/dest/dir');
     });
-    
+
     it('should use StrictHostKeyChecking if present', function (done) {
       connection = new Connection({
         remote: 'user@host',
-        strict: 'yes' 
+        strict: 'yes'
       });
       connection.copy('/src/dir', '/dest/dir', done);
       expect(childProcess.exec).to.be.calledWith('rsync -az -e "ssh -o StrictHostKeyChecking=yes" /src/dir user@host:/dest/dir');

@@ -1,7 +1,7 @@
 # ssh-pool
-[![Build Status](https://travis-ci.org/neoziro/ssh-pool.svg?branch=master)](https://travis-ci.org/neoziro/ssh-pool)
-[![Dependency Status](https://david-dm.org/neoziro/ssh-pool.svg?theme=shields.io)](https://david-dm.org/neoziro/ssh-pool)
-[![devDependency Status](https://david-dm.org/neoziro/ssh-pool/dev-status.svg?theme=shields.io)](https://david-dm.org/neoziro/ssh-pool#info=devDependencies)
+[![Build Status](https://travis-ci.org/shipitjs/ssh-pool.svg?branch=master)](https://travis-ci.org/shipitjs/ssh-pool)
+[![Dependency Status](https://david-dm.org/shipitjs/ssh-pool.svg?theme=shields.io)](https://david-dm.org/shipitjs/ssh-pool)
+[![devDependency Status](https://david-dm.org/shipitjs/ssh-pool/dev-status.svg?theme=shields.io)](https://david-dm.org/shipitjs/ssh-pool#info=devDependencies)
 
 Run remote commands over a pool of server using SSH.
 
@@ -44,7 +44,7 @@ The remote can use the shorthand syntax or an object:
 
 ```js
 // Default user will be deploy and ssh default port.
-new Connection({remote: 'localhost'}); 
+new Connection({remote: 'localhost'});
 
 // Default ssh port will be used.
 new Connection({remote: 'user@localhost'});

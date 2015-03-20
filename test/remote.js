@@ -20,7 +20,7 @@ describe('SSH remote', function () {
       var remoteObj = remote.parse('user@host');
       expect(remoteObj).have.property('user', 'user');
       expect(remoteObj).have.property('host', 'host');
-      expect(remoteObj).not.have.property('port');
+      expect(remoteObj).have.property('port', undefined);
     });
 
     it('should parse remote with port', function () {

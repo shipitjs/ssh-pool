@@ -1,12 +1,14 @@
 var rewire = require('rewire');
 var expect = require('chai').use(require('sinon-chai')).expect;
 var childProcess = require('./mocks/child-process');
+var mockWhereis = require('./mocks/mock-whereis');
 var Connection = rewire('../lib/connection');
 var ConnectionPool = rewire('../lib/connection-pool');
 
 describe('SSH Connection pool', function () {
   beforeEach(function () {
     Connection.__set__('exec', childProcess.exec.bind(childProcess));
+    Connection.__set__('whereis', mockWhereis({rsync: '/bin/rsync'}));
     ConnectionPool.__set__('Connection', Connection);
   });
 

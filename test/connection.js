@@ -2,11 +2,14 @@ var rewire = require('rewire');
 var expect = require('chai').use(require('sinon-chai')).expect;
 var stdMocks = require('std-mocks');
 var childProcess = require('./mocks/child-process');
+var mockWhereis = require('./mocks/mock-whereis');
 var Connection = rewire('../lib/connection');
+var Promise = require('bluebird');
 
 describe('SSH Connection', function () {
   beforeEach(function () {
     Connection.__set__('exec', childProcess.exec.bind(childProcess));
+    Connection.__set__('whereis', mockWhereis({rsync: '/bin/rsync'}));
   });
 
   afterEach(function () {
@@ -176,28 +179,73 @@ describe('SSH Connection', function () {
     });
 
     it('should call cmd.spawn', function (done) {
-      connection.copy('/src/dir', '/dest/dir', done);
-
-      expect(childProcess.exec).to.be.calledWith('rsync -az -e "ssh " /src/dir user@host:/dest/dir');
+      connection.copy('/src/dir', '/dest/dir', function (err) {
+        expect(childProcess.exec).to.be.calledWith('rsync -az -e "ssh " /src/dir user@host:/dest/dir');
+        done(err);
+      });
     });
 
     it('should accept "ignores" option', function (done) {
-      connection.copy('/src/dir', '/dest/dir', {ignores: ['a', 'b']}, done);
-
-      expect(childProcess.exec).to.be.calledWith('rsync --exclude "a" --exclude "b" -az -e ' +
+      connection.copy('/src/dir', '/dest/dir', {ignores: ['a', 'b']}, function (err) {
+        expect(childProcess.exec).to.be.calledWith('rsync --exclude "a" --exclude "b" -az -e ' +
         '"ssh " /src/dir user@host:/dest/dir');
+        done(err);
+      });
     });
 
     it('should accept "direction" option', function (done) {
-      connection.copy('/src/dir', '/dest/dir', {direction: 'remoteToLocal'}, done);
-
-      expect(childProcess.exec).to.be.calledWith('rsync -az -e "ssh " user@host:/src/dir /dest/dir');
+      connection.copy('/src/dir', '/dest/dir', {direction: 'remoteToLocal'}, function (err) {
+        expect(childProcess.exec).to.be.calledWith('rsync -az -e "ssh " user@host:/src/dir /dest/dir');
+        done(err);
+      });
     });
 
     it('should accept "rsync" option', function (done) {
-      connection.copy('/src/dir', '/dest/dir', {rsync: '--info=progress2'}, done);
+      connection.copy('/src/dir', '/dest/dir', {rsync: '--info=progress2'}, function (err) {
+        expect(childProcess.exec).to.be.calledWith('rsync -az --info=progress2 -e "ssh " /src/dir user@host:/dest/dir');
+        done(err);
+      });
+    });
 
-      expect(childProcess.exec).to.be.calledWith('rsync -az --info=progress2 -e "ssh " /src/dir user@host:/dest/dir');
+    it('should use tar+scp where rsync is not available', function(done) {
+      Connection.__set__('whereis', mockWhereis({}));
+      connection.copy('/src/dir', '/dest/dir', function (err) {
+        expect(childProcess.exec).to.be.calledWith('cd /src && tar -czf dir.tmp.tar.gz dir');
+        expect(childProcess.exec).to.be.calledWith('ssh user@host "mkdir -p /dest/dir"');
+        expect(childProcess.exec).to.be.calledWith('scp /src/dir.tmp.tar.gz user@host:/dest/dir');
+        expect(childProcess.exec).to.be.calledWith('cd /src && rm dir.tmp.tar.gz');
+        expect(childProcess.exec).to.be.calledWith('ssh user@host "cd /dest/dir && tar --strip-components 1 -xzf dir.tmp.tar.gz"');
+        expect(childProcess.exec).to.be.calledWith('ssh user@host "cd /dest/dir && rm dir.tmp.tar.gz"');
+        done(err);
+      });
+    });
+
+    it('should accept "direction" option when using tar+scp', function(done) {
+      Connection.__set__('whereis', mockWhereis({}));
+      connection.copy('/src/dir', '/dest/dir', {direction: 'remoteToLocal'}, function (err) {
+        expect(childProcess.exec).to.be.calledWith('ssh user@host "cd /src && tar -czf dir.tmp.tar.gz dir"');
+        expect(childProcess.exec).to.be.calledWith('mkdir -p /dest/dir');
+        expect(childProcess.exec).to.be.calledWith('scp user@host:/src/dir.tmp.tar.gz /dest/dir');
+        expect(childProcess.exec).to.be.calledWith('ssh user@host "cd /src && rm dir.tmp.tar.gz"');
+        expect(childProcess.exec).to.be.calledWith('cd /dest/dir && tar --strip-components 1 -xzf dir.tmp.tar.gz');
+        expect(childProcess.exec).to.be.calledWith('cd /dest/dir && rm dir.tmp.tar.gz');
+        done(err);
+      });
+    });
+
+    it('should accept port and key when using tar+scp', function (done) {
+      Connection.__set__('whereis', mockWhereis({}));
+      connection = new Connection({
+        remote: 'user@host:12345',
+        key:    '/path/to/key'
+      });
+      connection.copy('/src/dir', '/dest/dir', function (err) {
+        expect(childProcess.exec).to.be.calledWith('ssh -p 12345 -i /path/to/key user@host "mkdir -p /dest/dir"');
+        expect(childProcess.exec).to.be.calledWith('scp -P 12345 -i /path/to/key /src/dir.tmp.tar.gz user@host:/dest/dir');
+        expect(childProcess.exec).to.be.calledWith('ssh -p 12345 -i /path/to/key user@host "cd /dest/dir && tar --strip-components 1 -xzf dir.tmp.tar.gz"');
+        expect(childProcess.exec).to.be.calledWith('ssh -p 12345 -i /path/to/key user@host "cd /dest/dir && rm dir.tmp.tar.gz"');
+        done(err);
+      });
     });
 
     it('should use key if present', function (done) {
@@ -205,16 +253,20 @@ describe('SSH Connection', function () {
         remote: 'user@host',
         key: '/path/to/key'
       });
-      connection.copy('/src/dir', '/dest/dir', done);
-      expect(childProcess.exec).to.be.calledWith('rsync -az -e "ssh -i /path/to/key" /src/dir user@host:/dest/dir');
+      connection.copy('/src/dir', '/dest/dir', function (err) {
+        expect(childProcess.exec).to.be.calledWith('rsync -az -e "ssh -i /path/to/key" /src/dir user@host:/dest/dir');
+        done(err);
+      });
     });
 
     it('should use port if present', function (done) {
       connection = new Connection({
         remote: 'user@host:12345'
       });
-      connection.copy('/src/dir', '/dest/dir', done);
-      expect(childProcess.exec).to.be.calledWith('rsync -az -e "ssh -p 12345" /src/dir user@host:/dest/dir');
+      connection.copy('/src/dir', '/dest/dir', function (err) {
+        expect(childProcess.exec).to.be.calledWith('rsync -az -e "ssh -p 12345" /src/dir user@host:/dest/dir');
+        done(err);
+      });
     });
 
     it('should use StrictHostKeyChecking if present', function (done) {
@@ -222,8 +274,10 @@ describe('SSH Connection', function () {
         remote: 'user@host',
         strict: 'yes'
       });
-      connection.copy('/src/dir', '/dest/dir', done);
-      expect(childProcess.exec).to.be.calledWith('rsync -az -e "ssh -o StrictHostKeyChecking=yes" /src/dir user@host:/dest/dir');
+      connection.copy('/src/dir', '/dest/dir', function (err) {
+        expect(childProcess.exec).to.be.calledWith('rsync -az -e "ssh -o StrictHostKeyChecking=yes" /src/dir user@host:/dest/dir');
+        done(err);
+      });
     });
 
     it('should use port and key if both are present', function (done) {
@@ -231,8 +285,10 @@ describe('SSH Connection', function () {
         remote: 'user@host:12345',
         key: '/path/to/key'
       });
-      connection.copy('/src/dir', '/dest/dir', done);
-      expect(childProcess.exec).to.be.calledWith('rsync -az -e "ssh -p 12345 -i /path/to/key" /src/dir user@host:/dest/dir');
+      connection.copy('/src/dir', '/dest/dir', function (err) {
+        expect(childProcess.exec).to.be.calledWith('rsync -az -e "ssh -p 12345 -i /path/to/key" /src/dir user@host:/dest/dir');
+        done(err);
+      });
     });
 
     it('should log output', function (done) {
@@ -253,7 +309,7 @@ describe('SSH Connection', function () {
 
 
         var output = stdMocks.flush();
-        expect(output.stdout[0]).to.equal('Remote copy "/src/dir" to "user@host:/dest/dir"\n');
+        expect(output.stdout[0]).to.equal('Copy "/src/dir" to "user@host:/dest/dir" via rsync\n');
         expect(output.stdout[1].toString()).to.equal('@host first line\n');
 
         expect(output.stderr[0].toString()).to.equal('@host-err an error\n');

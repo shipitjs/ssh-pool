@@ -223,6 +223,7 @@ describe('SSH Connection', function () {
 
     it('should transform windows-style paths when calling the scp command when using tar+scp', function(done) {
       Connection.__set__('whereis', mockWhereis({}));
+      console.log(path.win32);
       Connection.__set__('path', path.win32);
       connection.copy('c:\\src\\dir', '/dest/dir', function (err) {
         Connection.__set__('path', path);

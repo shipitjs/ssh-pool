@@ -220,6 +220,19 @@ describe('SSH Connection', function () {
       });
     });
 
+    it('should transform windows-style paths when calling the scp command when using tar+scp', function(done) {
+      Connection.__set__('whereis', mockWhereis({}));
+      connection.copy('c:\\src\\dir', '/dest/dir', function (err) {
+        expect(childProcess.exec).to.be.calledWith('cd c:\\src && tar -czf dir.tmp.tar.gz dir');
+        expect(childProcess.exec).to.be.calledWith('ssh user@host "mkdir -p /dest/dir"');
+        expect(childProcess.exec).to.be.calledWith('scp /c/src/dir.tmp.tar.gz user@host:/dest/dir');
+        expect(childProcess.exec).to.be.calledWith('cd c:\\src && rm dir.tmp.tar.gz');
+        expect(childProcess.exec).to.be.calledWith('ssh user@host "cd /dest/dir && tar --strip-components 1 -xzf dir.tmp.tar.gz"');
+        expect(childProcess.exec).to.be.calledWith('ssh user@host "cd /dest/dir && rm dir.tmp.tar.gz"');
+        done(err);
+      });
+    });
+
     it('should accept "direction" option when using tar+scp', function(done) {
       Connection.__set__('whereis', mockWhereis({}));
       connection.copy('/src/dir', '/dest/dir', {direction: 'remoteToLocal'}, function (err) {

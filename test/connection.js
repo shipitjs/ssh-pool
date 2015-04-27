@@ -1,4 +1,5 @@
 var rewire = require('rewire');
+var path = require('path');
 var expect = require('chai').use(require('sinon-chai')).expect;
 var stdMocks = require('std-mocks');
 var childProcess = require('./mocks/child-process');
@@ -214,6 +215,21 @@ describe('SSH Connection', function () {
         expect(childProcess.exec).to.be.calledWith('ssh user@host "mkdir -p /dest/dir"');
         expect(childProcess.exec).to.be.calledWith('scp /src/dir.tmp.tar.gz user@host:/dest/dir');
         expect(childProcess.exec).to.be.calledWith('cd /src && rm dir.tmp.tar.gz');
+        expect(childProcess.exec).to.be.calledWith('ssh user@host "cd /dest/dir && tar --strip-components 1 -xzf dir.tmp.tar.gz"');
+        expect(childProcess.exec).to.be.calledWith('ssh user@host "cd /dest/dir && rm dir.tmp.tar.gz"');
+        done(err);
+      });
+    });
+
+    it('should transform windows-style paths when calling the scp command when using tar+scp', function(done) {
+      Connection.__set__('whereis', mockWhereis({}));
+      Connection.__set__('path', require('./support/path.0.12').win32);
+      connection.copy('c:\\src\\dir', '/dest/dir', function (err) {
+        Connection.__set__('path', path);
+        expect(childProcess.exec).to.be.calledWith('cd c:\\src && tar -czf dir.tmp.tar.gz dir');
+        expect(childProcess.exec).to.be.calledWith('ssh user@host "mkdir -p /dest/dir"');
+        expect(childProcess.exec).to.be.calledWith('scp /c/src/dir.tmp.tar.gz user@host:/dest/dir');
+        expect(childProcess.exec).to.be.calledWith('cd c:\\src && rm dir.tmp.tar.gz');
         expect(childProcess.exec).to.be.calledWith('ssh user@host "cd /dest/dir && tar --strip-components 1 -xzf dir.tmp.tar.gz"');
         expect(childProcess.exec).to.be.calledWith('ssh user@host "cd /dest/dir && rm dir.tmp.tar.gz"');
         done(err);

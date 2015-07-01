@@ -53,7 +53,7 @@ describe('SSH Connection', function () {
       connection.run('my-command -x', {cwd: '/root'}, done);
 
       expect(childProcess.exec).to.be.calledWith(
-        'ssh user@host "my-command -x"',
+        'ssh -tt user@host "my-command -x"',
         {cwd: '/root', maxBuffer: 1000 * 1024}
       );
     });
@@ -62,7 +62,7 @@ describe('SSH Connection', function () {
       connection.run('echo "ok"', {cwd: '/root'}, done);
 
       expect(childProcess.exec).to.be.calledWith(
-        'ssh user@host "echo \\"ok\\""',
+        'ssh -tt user@host "echo \\"ok\\""',
         {cwd: '/root', maxBuffer: 1000 * 1024}
       );
     });
@@ -90,11 +90,11 @@ describe('SSH Connection', function () {
       connection.run('my-command2 -x', function () {});
 
       expect(childProcess.exec).to.be.calledWith(
-        'ssh user@host "my-command -x"'
+        'ssh -tt user@host "my-command -x"'
       );
 
       expect(childProcess.exec).to.be.calledWith(
-        'ssh user@host "my-command2 -x"'
+        'ssh -tt user@host "my-command2 -x"'
       );
     });
 
@@ -105,7 +105,7 @@ describe('SSH Connection', function () {
       });
       connection.run('my-command -x', function () {});
       expect(childProcess.exec).to.be.calledWith(
-        'ssh -i /path/to/key user@host "my-command -x"'
+        'ssh -tt -i /path/to/key user@host "my-command -x"'
       );
     });
 
@@ -115,7 +115,7 @@ describe('SSH Connection', function () {
       });
       connection.run('my-command -x', function () {});
       expect(childProcess.exec).to.be.calledWith(
-        'ssh -p 12345 user@host "my-command -x"'
+        'ssh -tt -p 12345 user@host "my-command -x"'
       );
     });
 
@@ -126,7 +126,7 @@ describe('SSH Connection', function () {
       });
       connection.run('my-command -x', function () {});
       expect(childProcess.exec).to.be.calledWith(
-        'ssh -o StrictHostKeyChecking=no user@host "my-command -x"'
+        'ssh -tt -o StrictHostKeyChecking=no user@host "my-command -x"'
       );
     });
 
@@ -137,7 +137,7 @@ describe('SSH Connection', function () {
       });
       connection.run('my-command -x', function () {});
       expect(childProcess.exec).to.be.calledWith(
-        'ssh -p 12345 -i /path/to/key user@host "my-command -x"'
+        'ssh -tt -p 12345 -i /path/to/key user@host "my-command -x"'
       );
     });
 
@@ -212,11 +212,11 @@ describe('SSH Connection', function () {
       Connection.__set__('whereis', mockWhereis({}));
       connection.copy('/src/dir', '/dest/dir', function (err) {
         expect(childProcess.exec).to.be.calledWith('cd /src && tar -czf dir.tmp.tar.gz dir');
-        expect(childProcess.exec).to.be.calledWith('ssh user@host "mkdir -p /dest/dir"');
+        expect(childProcess.exec).to.be.calledWith('ssh -tt user@host "mkdir -p /dest/dir"');
         expect(childProcess.exec).to.be.calledWith('scp /src/dir.tmp.tar.gz user@host:/dest/dir');
         expect(childProcess.exec).to.be.calledWith('cd /src && rm dir.tmp.tar.gz');
-        expect(childProcess.exec).to.be.calledWith('ssh user@host "cd /dest/dir && tar --strip-components 1 -xzf dir.tmp.tar.gz"');
-        expect(childProcess.exec).to.be.calledWith('ssh user@host "cd /dest/dir && rm dir.tmp.tar.gz"');
+        expect(childProcess.exec).to.be.calledWith('ssh -tt user@host "cd /dest/dir && tar --strip-components 1 -xzf dir.tmp.tar.gz"');
+        expect(childProcess.exec).to.be.calledWith('ssh -tt user@host "cd /dest/dir && rm dir.tmp.tar.gz"');
         done(err);
       });
     });
@@ -227,11 +227,11 @@ describe('SSH Connection', function () {
       connection.copy('c:\\src\\dir', '/dest/dir', function (err) {
         Connection.__set__('path', path);
         expect(childProcess.exec).to.be.calledWith('cd c:\\src && tar -czf dir.tmp.tar.gz dir');
-        expect(childProcess.exec).to.be.calledWith('ssh user@host "mkdir -p /dest/dir"');
+        expect(childProcess.exec).to.be.calledWith('ssh -tt user@host "mkdir -p /dest/dir"');
         expect(childProcess.exec).to.be.calledWith('scp /c/src/dir.tmp.tar.gz user@host:/dest/dir');
         expect(childProcess.exec).to.be.calledWith('cd c:\\src && rm dir.tmp.tar.gz');
-        expect(childProcess.exec).to.be.calledWith('ssh user@host "cd /dest/dir && tar --strip-components 1 -xzf dir.tmp.tar.gz"');
-        expect(childProcess.exec).to.be.calledWith('ssh user@host "cd /dest/dir && rm dir.tmp.tar.gz"');
+        expect(childProcess.exec).to.be.calledWith('ssh -tt user@host "cd /dest/dir && tar --strip-components 1 -xzf dir.tmp.tar.gz"');
+        expect(childProcess.exec).to.be.calledWith('ssh -tt user@host "cd /dest/dir && rm dir.tmp.tar.gz"');
         done(err);
       });
     });
@@ -239,10 +239,10 @@ describe('SSH Connection', function () {
     it('should accept "direction" option when using tar+scp', function(done) {
       Connection.__set__('whereis', mockWhereis({}));
       connection.copy('/src/dir', '/dest/dir', {direction: 'remoteToLocal'}, function (err) {
-        expect(childProcess.exec).to.be.calledWith('ssh user@host "cd /src && tar -czf dir.tmp.tar.gz dir"');
+        expect(childProcess.exec).to.be.calledWith('ssh -tt user@host "cd /src && tar -czf dir.tmp.tar.gz dir"');
         expect(childProcess.exec).to.be.calledWith('mkdir -p /dest/dir');
         expect(childProcess.exec).to.be.calledWith('scp user@host:/src/dir.tmp.tar.gz /dest/dir');
-        expect(childProcess.exec).to.be.calledWith('ssh user@host "cd /src && rm dir.tmp.tar.gz"');
+        expect(childProcess.exec).to.be.calledWith('ssh -tt user@host "cd /src && rm dir.tmp.tar.gz"');
         expect(childProcess.exec).to.be.calledWith('cd /dest/dir && tar --strip-components 1 -xzf dir.tmp.tar.gz');
         expect(childProcess.exec).to.be.calledWith('cd /dest/dir && rm dir.tmp.tar.gz');
         done(err);
@@ -256,10 +256,10 @@ describe('SSH Connection', function () {
         key:    '/path/to/key'
       });
       connection.copy('/src/dir', '/dest/dir', function (err) {
-        expect(childProcess.exec).to.be.calledWith('ssh -p 12345 -i /path/to/key user@host "mkdir -p /dest/dir"');
+        expect(childProcess.exec).to.be.calledWith('ssh -tt -p 12345 -i /path/to/key user@host "mkdir -p /dest/dir"');
         expect(childProcess.exec).to.be.calledWith('scp -P 12345 -i /path/to/key /src/dir.tmp.tar.gz user@host:/dest/dir');
-        expect(childProcess.exec).to.be.calledWith('ssh -p 12345 -i /path/to/key user@host "cd /dest/dir && tar --strip-components 1 -xzf dir.tmp.tar.gz"');
-        expect(childProcess.exec).to.be.calledWith('ssh -p 12345 -i /path/to/key user@host "cd /dest/dir && rm dir.tmp.tar.gz"');
+        expect(childProcess.exec).to.be.calledWith('ssh -tt -p 12345 -i /path/to/key user@host "cd /dest/dir && tar --strip-components 1 -xzf dir.tmp.tar.gz"');
+        expect(childProcess.exec).to.be.calledWith('ssh -tt -p 12345 -i /path/to/key user@host "cd /dest/dir && rm dir.tmp.tar.gz"');
         done(err);
       });
     });

@@ -1,6 +1,6 @@
 var sshPool = require('../');
 
-var pool = new sshPool.ConnectionPool(['neoziro@localhost', 'neoziro@localhost']);
+var pool = new sshPool.ConnectionPool(['neoziro@localhost', 'neoziro@localhost'], 'neoziro@proxyhost');
 
 pool.run('hostname')
 .then(function (results) {

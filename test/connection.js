@@ -170,6 +170,35 @@ describe('SSH Connection', function () {
     });
   });
 
+  describe('#run asUser', function () {
+    var connection;
+
+    beforeEach(function () {
+      connection = new Connection({
+        remote: 'user@host',
+        asUser: 'test'
+      });
+    });
+
+    it('should handle sudo as user correctly', function (done) {
+      connection.run('sudo my-command -x', {cwd: '/root'}, done);
+
+      expect(childProcess.exec).to.be.calledWith(
+        'ssh -tt user@host "sudo -u test my-command -x"',
+        {cwd: '/root', maxBuffer: 1000 * 1024}
+      );
+    });
+    
+    it('should handle sudo as user without double sudo', function (done) {
+      connection.run('sudo my-command -x', {cwd: '/root'}, done);
+
+      expect(childProcess.exec).to.be.calledWith(
+        'ssh -tt user@host "sudo -u test my-command -x"',
+        {cwd: '/root', maxBuffer: 1000 * 1024}
+      );
+    });
+  });
+
   describe('#copy', function () {
     var connection;
 

@@ -34,6 +34,7 @@ Create a new connection to run command on a remote server.
 ```
 @param {object} options Options
 @param {string|object} options.remote Remote
+@param {string|object} options.proxy Proxy
 @param {Stream} [options.stdout] Stdout stream
 @param {Stream} [options.stderr] Stderr stream
 @param {string} [options.key] SSH key
@@ -51,6 +52,9 @@ new Connection({remote: 'user@localhost'});
 
 // Custom user and custom port.
 new Connection({remote: 'user@localhost:22'});
+
+// Connecting to remote host via proxy.
+new Connection({remote: 'user@remotehost', proxy: 'user@proxyhost'});
 
 // Object syntax.
 new Connection({remote: {user: 'user', host: 'localhost', port: 22}});

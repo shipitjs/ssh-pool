@@ -119,17 +119,6 @@ describe('SSH Connection', function () {
       );
     });
 
-    it('should connect via proxy if present', function () {
-      connection = new Connection({
-        remote: 'user@host',
-        proxy: 'user@proxy'
-      });
-      connection.run('my-command -x', function () {});
-      expect(childProcess.exec).to.be.calledWith(
-        'ssh user@proxy ssh user@host "my-command -x"'
-      );
-    });
-
     it('should use StrictHostKeyChecking if present', function () {
       connection = new Connection({
         remote: 'user@host',
@@ -152,18 +141,6 @@ describe('SSH Connection', function () {
       );
     });
 
-    it('should connect via proxy and use port and key if both are present', function () {
-      connection = new Connection({
-        remote: 'user@host',
-        proxy: 'user@proxy:12345',
-        key: '/path/to/key'
-      });
-      connection.run('my-command -x', function () {});
-      expect(childProcess.exec).to.be.calledWith(
-        'ssh -p 12345 -i /path/to/key user@proxy ssh user@host "my-command -x"'
-      );
-    });
-
     it('should log output', function (done) {
       connection = new Connection({
         remote: 'user@host',
@@ -174,8 +151,8 @@ describe('SSH Connection', function () {
 
       stdMocks.use();
       connection.run('my-command -x', function (err, res) {
-        // res.child.stdout.push('first line\n');
-        // res.child.stdout.push(null);
+        res.child.stdout.push('first line\n');
+        res.child.stdout.push(null);
 
         res.child.stderr.push('an error\n');
         res.child.stderr.push(null);
@@ -183,7 +160,8 @@ describe('SSH Connection', function () {
 
         var output = stdMocks.flush();
         expect(output.stdout[0]).to.equal('Running "my-command -x" on host "host".\n');
-        // expect(output.stdout[1].toString()).to.equal('@host first line\n');
+        expect(output.stdout[1].toString()).to.equal('@host first line\n');
+
         expect(output.stderr[0].toString()).to.equal('@host-err an error\n');
 
         stdMocks.restore();

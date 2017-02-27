@@ -49,12 +49,12 @@ describe('SSH Connection pool', function () {
         expect(results[1].stdout).to.equal('stdout');
 
         expect(childProcess.exec).to.be.calledWith(
-          'ssh deploy@myserver "my-command -x"',
+          'ssh -tt deploy@myserver "my-command -x"',
           {cwd: '/root', maxBuffer: 1000 * 1024}
         );
 
         expect(childProcess.exec).to.be.calledWith(
-          'ssh deploy@myserver2 "my-command -x"',
+          'ssh -tt deploy@myserver2 "my-command -x"',
           {cwd: '/root', maxBuffer: 1000 * 1024}
         );
 

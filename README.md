@@ -1,3 +1,7 @@
+# ⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
+# This repository has moved to [Shipit main repository](https://github.com/shipitjs/shipit)
+# ⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
+
 # ssh-pool
 [![Build Status](https://travis-ci.org/shipitjs/ssh-pool.svg?branch=master)](https://travis-ci.org/shipitjs/ssh-pool)
 [![Dependency Status](https://david-dm.org/shipitjs/ssh-pool.svg?theme=shields.io)](https://david-dm.org/shipitjs/ssh-pool)
